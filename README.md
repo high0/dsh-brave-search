@@ -37,7 +37,7 @@ dsh plugin --profile demo add github:high0/dsh-brave-search && dsh --profile dem
 如果希望后续仓库更新不会改变已安装代码，可以锁定一个 commit：
 
 ```sh
-dsh plugin --profile demo add github:high0/dsh-brave-search#6d0bc96
+dsh plugin --profile demo add github:high0/dsh-brave-search#1b56302
 ```
 
 更新插件时再次执行 `add` 并指定新的 commit；卸载使用：
