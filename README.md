@@ -10,25 +10,27 @@
 export BRAVE_SEARCH_API_KEY="你的 Brave API key"
 ```
 
-然后直接从 GitHub 安装已构建的 bundle（不需要 clone、`npm install`、编译或手动编辑 profile 文件）：
+然后直接从 GitHub 安装已构建的 bundle（不需要 clone、`npm install`、编译或手动编辑 profile 文件）。如果你按官方命令运行 `npx @deepseek-ai/dsh web`，目标 profile 是 `web`：
 
 ```sh
-dsh plugin --profile demo add github:high0/dsh-brave-search
+dsh plugin --profile web add github:high0/dsh-brave-search
 ```
 
 安装完成后启动 profile：
 
 ```sh
-dsh --profile demo
+npx @deepseek-ai/dsh web
 ```
 
-如果 profile 已经在运行，只需重启一次让新 bundle 生效。上面的 `add` 命令会自动初始化 profile、安装依赖、登记 `dsh-brave-search` 配置层并加载 `brave_search` 工具。安装完成后不依赖本地源码目录，可以删除 clone 出来的仓库目录。
+如果 profile 已经在运行，必须重启一次让新的后端 bundle 生效。上面的 `add` 命令会自动初始化 profile、安装依赖、登记 `dsh-brave-search` 配置层并加载 `brave_search` 工具。安装完成后不依赖本地源码目录，可以删除 clone 出来的仓库目录。
 
-也可以把安装和启动写成一条命令（前提是已设置 `BRAVE_SEARCH_API_KEY`）：
+也可以把 `web` profile 的安装和启动写成一条命令（前提是已设置 `BRAVE_SEARCH_API_KEY`）：
 
 ```sh
-dsh plugin --profile demo add github:high0/dsh-brave-search && dsh --profile demo
+dsh plugin --profile web add github:high0/dsh-brave-search && npx @deepseek-ai/dsh web
 ```
+
+这里的 `web` 是 DeepSeek Harness 官方默认 profile 名称；`demo` 只是自定义 profile 的示例名称，不是插件要求的固定名称。如果你使用自定义 profile（例如 `demo`），请将命令中的 `web` 替换为该 profile 名称。插件是后端工具 bundle，不提供浏览器端 `client.js`，因此不会出现在页面启动资源清单中；重启对应 profile 后，工具 `brave_search` 才会注册到 Harness。
 
 环境变量 `BRAVE_SEARCH_API_KEY` 始终优先于 profile 配置中的 `apiKey`。密钥不会被写入 URL、工具结果或错误消息。
 
@@ -37,13 +39,13 @@ dsh plugin --profile demo add github:high0/dsh-brave-search && dsh --profile dem
 如果希望后续仓库更新不会改变已安装代码，可以锁定一个 commit：
 
 ```sh
-dsh plugin --profile demo add github:high0/dsh-brave-search#1b56302
+dsh plugin --profile web add github:high0/dsh-brave-search#1b56302
 ```
 
 更新插件时再次执行 `add` 并指定新的 commit；卸载使用：
 
 ```sh
-dsh plugin --profile demo remove dsh-brave-search
+dsh plugin --profile web remove dsh-brave-search
 ```
 
 ## 工具调用
@@ -73,7 +75,7 @@ dsh plugin --profile demo remove dsh-brave-search
 
 ## 故障排查
 
-- `dsh: failed to load .env: EISDIR`：这不是插件错误。Harness 会自动读取用户目录下的 `~/.env` 文件；如果该路径被其他程序用作目录（例如 Python 虚拟环境），就会出现此错误。请先退出正在使用该目录的程序，再将目录改名为其他名称，例如 `mv ~/.env ~/.python-env`，然后重新执行 `dsh --profile demo`。如果你确实需要环境文件，应创建普通文件 `~/.env`，每行使用 `KEY=value` 格式。
+- `dsh: failed to load .env: EISDIR`：这不是插件错误。Harness 会自动读取用户目录下的 `~/.env` 文件；如果该路径被其他程序用作目录（例如 Python 虚拟环境），就会出现此错误。请先退出正在使用该目录的程序，再将目录改名为其他名称，例如 `mv ~/.env ~/.python-env`，然后重新执行 `npx @deepseek-ai/dsh web`。如果你确实需要环境文件，应创建普通文件 `~/.env`，每行使用 `KEY=value` 格式。
 - `MISSING_API_KEY`：设置 `BRAVE_SEARCH_API_KEY`，或在插件配置中提供 `apiKey`。
 - `INVALID_PARAMS` / `INVALID_QUERY`：检查服务对应的参数名、枚举和数值边界。
 - `TIMEOUT` / `CANCELLED`：检查网络、`timeoutMs` 和调用方取消信号。
