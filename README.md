@@ -73,6 +73,7 @@ dsh plugin --profile demo remove dsh-brave-search
 
 ## 故障排查
 
+- `dsh: failed to load .env: EISDIR`：这不是插件错误。Harness 会自动读取用户目录下的 `~/.env` 文件；如果该路径被其他程序用作目录（例如 Python 虚拟环境），就会出现此错误。请先退出正在使用该目录的程序，再将目录改名为其他名称，例如 `mv ~/.env ~/.python-env`，然后重新执行 `dsh --profile demo`。如果你确实需要环境文件，应创建普通文件 `~/.env`，每行使用 `KEY=value` 格式。
 - `MISSING_API_KEY`：设置 `BRAVE_SEARCH_API_KEY`，或在插件配置中提供 `apiKey`。
 - `INVALID_PARAMS` / `INVALID_QUERY`：检查服务对应的参数名、枚举和数值边界。
 - `TIMEOUT` / `CANCELLED`：检查网络、`timeoutMs` 和调用方取消信号。
