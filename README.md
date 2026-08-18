@@ -7,7 +7,7 @@
 先在 Brave API 控制台创建一个 key。下面这一整行可以直接复制粘贴：它会隐藏输入 key、持久写入 Harness 会自动读取的 `~/.env`，安装到官方默认的 `web` profile，并启动 dsh。这个 key 不会出现在命令历史中：
 
 ```sh
-umask 077; read -rsp 'Brave API key: ' BRAVE_SEARCH_API_KEY; printf '\n'; if [ -e ~/.env ] && [ ! -f ~/.env ]; then printf '%s\n' '~/.env exists but is not a regular file; rename or remove that directory first.' >&2; unset BRAVE_SEARCH_API_KEY; else touch ~/.env && sed -i '' '/^BRAVE_SEARCH_API_KEY=/d' ~/.env && printf 'BRAVE_SEARCH_API_KEY=%s\n' "$BRAVE_SEARCH_API_KEY" >> ~/.env && unset BRAVE_SEARCH_API_KEY && dsh plugin --profile web add github:high0/dsh-brave-search && npx @deepseek-ai/dsh web; fi
+umask 077; read -rs "BRAVE_SEARCH_API_KEY?Brave API key: "; printf '\n'; if [ -e ~/.env ] && [ ! -f ~/.env ]; then printf '%s\n' '~/.env exists but is not a regular file; rename or remove that directory first.' >&2; unset BRAVE_SEARCH_API_KEY; else touch ~/.env && sed -i '' '/^BRAVE_SEARCH_API_KEY=/d' ~/.env && printf 'BRAVE_SEARCH_API_KEY=%s\n' "$BRAVE_SEARCH_API_KEY" >> ~/.env && unset BRAVE_SEARCH_API_KEY && (dsh plugin --profile web remove dsh-brave-search >/dev/null 2>&1 || true) && dsh plugin --profile web add github:high0/dsh-brave-search && npx @deepseek-ai/dsh web; fi
 ```
 
 执行后会先显示 `Brave API key:`，输入时不会回显字符。`~/.env` 必须是普通文件而不是目录；上面的命令会替换已有的 `BRAVE_SEARCH_API_KEY` 行并持久保存，后续打开新终端也能被 Harness 自动读取。如果只想临时使用，也可以执行 `export BRAVE_SEARCH_API_KEY="你的 Brave API key"`；这种方式只对当前终端有效，关闭终端后不会保留。
@@ -38,10 +38,10 @@ dsh plugin --profile web add github:high0/dsh-brave-search && npx @deepseek-ai/d
 
 ### 固定版本（生产环境推荐）
 
-如果希望后续仓库更新不会改变已安装代码，可以锁定一个 commit：
+如果希望后续仓库更新不会改变已安装代码，可以锁定一个完整 commit SHA（不要使用可能无法被 Git 远端解析的短 SHA）：
 
 ```sh
-dsh plugin --profile web add github:high0/dsh-brave-search#1b56302
+dsh plugin --profile web add github:high0/dsh-brave-search#ac7ac583cc47df09aa0a972b5068bc04c01c2295
 ```
 
 更新插件时再次执行 `add` 并指定新的 commit；卸载使用：
