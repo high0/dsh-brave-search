@@ -4,11 +4,16 @@
 
 ## 安装：用户只需一条命令
 
-先在 Brave API 控制台创建一个 key，并在当前终端设置环境变量。这个 key 是调用 Brave 服务的必要凭据：
+先在 Brave API 控制台创建一个 key，并保存到 Harness 会自动读取的用户环境文件。这个 key 是调用 Brave 服务的必要凭据；下面的交互式命令不会把 key 暴露在命令历史中：
 
 ```sh
-export BRAVE_SEARCH_API_KEY="你的 Brave API key"
+umask 077
+read -rsp 'Brave API key: ' BRAVE_SEARCH_API_KEY
+printf '\nBRAVE_SEARCH_API_KEY=%s\n' "$BRAVE_SEARCH_API_KEY" >> ~/.env
+unset BRAVE_SEARCH_API_KEY
 ```
+
+`~/.env` 必须是普通文件而不是目录。上面的配置会持久保存，后续打开新终端也能被 Harness 自动读取。如果只想临时使用，也可以执行 `export BRAVE_SEARCH_API_KEY="你的 Brave API key"`；这种方式只对当前终端有效，关闭终端后不会保留。
 
 然后直接从 GitHub 安装已构建的 bundle（不需要 clone、`npm install`、编译或手动编辑 profile 文件）。如果你按官方命令运行 `npx @deepseek-ai/dsh web`，目标 profile 是 `web`：
 
@@ -24,7 +29,7 @@ npx @deepseek-ai/dsh web
 
 如果 profile 已经在运行，必须重启一次让新的后端 bundle 生效。上面的 `add` 命令会自动初始化 profile、安装依赖、登记 `dsh-brave-search` 配置层并加载 `brave_search` 工具。安装完成后不依赖本地源码目录，可以删除 clone 出来的仓库目录。
 
-也可以把 `web` profile 的安装和启动写成一条命令（前提是已设置 `BRAVE_SEARCH_API_KEY`）：
+也可以把 `web` profile 的安装和启动写成一条命令（前提是已经通过 `~/.env` 或当前终端设置了 `BRAVE_SEARCH_API_KEY`）：
 
 ```sh
 dsh plugin --profile web add github:high0/dsh-brave-search && npx @deepseek-ai/dsh web
