@@ -2,22 +2,49 @@
 
 `dsh-brave-search` 是一个可安装的 DeepSeek Harness 原生 bundle，注册统一的 `brave_search` 工具，调用 Brave Search API 的 Web、News、Image、Video 和 LLM Context 五类 GET 服务。
 
-## 安装
+## 安装：用户只需一条命令
 
-在 Harness 项目中添加本地 bundle：
-
-```sh
-dsh plugin --profile demo add ./dsh-brave-search
-```
-
-推荐使用环境变量提供凭据：
+先在 Brave API 控制台创建一个 key，并在当前终端设置环境变量。这个 key 是调用 Brave 服务的必要凭据：
 
 ```sh
 export BRAVE_SEARCH_API_KEY="你的 Brave API key"
+```
+
+然后直接从 GitHub 安装已构建的 bundle（不需要 clone、`npm install`、编译或手动编辑 profile 文件）：
+
+```sh
+dsh plugin --profile demo add github:high0/dsh-brave-search
+```
+
+安装完成后启动 profile：
+
+```sh
 dsh --profile demo
 ```
 
-也可以在 profile 的 `cordis.yml` 中配置 `apiKey`、`baseUrl`、`timeoutMs` 和按服务划分的 `defaults`；环境变量 `BRAVE_SEARCH_API_KEY` 始终优先于配置文件中的 `apiKey`。密钥不会被写入 URL、工具结果或错误消息。
+如果 profile 已经在运行，只需重启一次让新 bundle 生效。上面的 `add` 命令会自动初始化 profile、安装依赖、登记 `dsh-brave-search` 配置层并加载 `brave_search` 工具。安装完成后不依赖本地源码目录，可以删除 clone 出来的仓库目录。
+
+也可以把安装和启动写成一条命令（前提是已设置 `BRAVE_SEARCH_API_KEY`）：
+
+```sh
+dsh plugin --profile demo add github:high0/dsh-brave-search && dsh --profile demo
+```
+
+环境变量 `BRAVE_SEARCH_API_KEY` 始终优先于 profile 配置中的 `apiKey`。密钥不会被写入 URL、工具结果或错误消息。
+
+### 固定版本（生产环境推荐）
+
+如果希望后续仓库更新不会改变已安装代码，可以锁定一个 commit：
+
+```sh
+dsh plugin --profile demo add github:high0/dsh-brave-search#6d0bc96
+```
+
+更新插件时再次执行 `add` 并指定新的 commit；卸载使用：
+
+```sh
+dsh plugin --profile demo remove dsh-brave-search
+```
 
 ## 工具调用
 

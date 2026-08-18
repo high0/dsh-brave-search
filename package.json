@@ -29,6 +29,10 @@
     "LICENSE"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/high0/dsh-brave-search.git"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
@@ -52,7 +56,6 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsx --test tests/**/*.test.ts",
-    "test:smoke": "tsx --test tests/smoke.test.ts",
-    "prepare": "npm run build"
+    "test:smoke": "tsx --test tests/smoke.test.ts"
   }
 }
