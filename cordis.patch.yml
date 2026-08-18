@@ -1,0 +1,5 @@
+- insert:
+    - id: brave-search
+      name: 'dsh-brave-search'
+      config:
+        apiKey: !!js process.env.BRAVE_SEARCH_API_KEY
