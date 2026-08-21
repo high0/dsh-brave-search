@@ -4,13 +4,72 @@
 
 ## 安装：用户只需一条命令
 
-先在 Brave API 控制台创建一个 key。下面这一整行可以直接复制粘贴：它会隐藏输入 key、持久写入 Harness 会自动读取的 `~/.env`，安装到官方默认的 `web` profile，并启动 dsh。这个 key 不会出现在命令历史中：
+先在 Brave API 控制台创建一个 key。安装命令会把插件加入官方默认的 `web` profile；这里的 `web` 是 profile 名称，不是插件名称。如果你使用自定义 profile（例如 `demo`），请将命令中的 `web` 替换为该 profile 名称。
 
-```sh
-umask 077; read -rs "BRAVE_SEARCH_API_KEY?Brave API key: "; printf '\n'; if [ -e ~/.env ] && [ ! -f ~/.env ]; then printf '%s\n' '~/.env exists but is not a regular file; rename or remove that directory first.' >&2; unset BRAVE_SEARCH_API_KEY; else touch ~/.env && sed -i '' '/^BRAVE_SEARCH_API_KEY=/d' ~/.env && printf 'BRAVE_SEARCH_API_KEY=%s\n' "$BRAVE_SEARCH_API_KEY" >> ~/.env && unset BRAVE_SEARCH_API_KEY && (dsh plugin --profile web remove dsh-brave-search >/dev/null 2>&1 || true) && dsh plugin --profile web add github:high0/dsh-brave-search && npx @deepseek-ai/dsh web; fi
+### macOS（默认 zsh）
+
+下面这一整行适用于 macOS 默认终端，可以直接复制粘贴。它会隐藏输入 key、持久写入 Harness 会自动读取的 `~/.env`，安装插件并启动 dsh。这个 key 不会出现在命令历史中：
+
+```zsh
+umask 077; read -rs "BRAVE_SEARCH_API_KEY?Brave API key: "; printf '\n'; if [ -e "$HOME/.env" ] && [ ! -f "$HOME/.env" ]; then printf '%s\n' "$HOME/.env exists but is not a regular file; rename or remove that directory first." >&2; unset BRAVE_SEARCH_API_KEY; else touch "$HOME/.env" && sed -i '' '/^BRAVE_SEARCH_API_KEY=/d' "$HOME/.env" && printf 'BRAVE_SEARCH_API_KEY=%s\n' "$BRAVE_SEARCH_API_KEY" >> "$HOME/.env" && unset BRAVE_SEARCH_API_KEY && (dsh plugin --profile web remove dsh-brave-search >/dev/null 2>&1 || true) && dsh plugin --profile web add github:high0/dsh-brave-search && npx @deepseek-ai/dsh web; fi
 ```
 
-执行后会先显示 `Brave API key:`，输入时不会回显字符。`~/.env` 必须是普通文件而不是目录；上面的命令会替换已有的 `BRAVE_SEARCH_API_KEY` 行并持久保存，后续打开新终端也能被 Harness 自动读取。如果只想临时使用，也可以执行 `export BRAVE_SEARCH_API_KEY="你的 Brave API key"`；这种方式只对当前终端有效，关闭终端后不会保留。
+### Linux（默认 bash）
+
+Linux 默认通常是 bash，不能使用上面的 zsh `read` 语法；请使用这一整行：
+
+```bash
+umask 077; read -r -s -p 'Brave API key: ' BRAVE_SEARCH_API_KEY; printf '\n'; if [ -e "$HOME/.env" ] && [ ! -f "$HOME/.env" ]; then printf '%s\n' "$HOME/.env exists but is not a regular file; rename or remove that directory first." >&2; unset BRAVE_SEARCH_API_KEY; else touch "$HOME/.env" && sed -i '/^BRAVE_SEARCH_API_KEY=/d' "$HOME/.env" && printf 'BRAVE_SEARCH_API_KEY=%s\n' "$BRAVE_SEARCH_API_KEY" >> "$HOME/.env" && unset BRAVE_SEARCH_API_KEY && (dsh plugin --profile web remove dsh-brave-search >/dev/null 2>&1 || true) && dsh plugin --profile web add github:high0/dsh-brave-search && npx @deepseek-ai/dsh web; fi
+```
+
+macOS 使用 BSD `sed`，所以是 `sed -i ''`；Linux 使用 GNU `sed`，所以是 `sed -i`。如果 Linux 用户使用 zsh，仍需使用 Linux 版本的 `sed -i`。
+
+### Windows PowerShell
+
+Windows CMD 和 PowerShell 不能直接运行上面的 Unix shell 命令。PowerShell 请复制执行下面这一段；它会隐藏输入 key、写入 Windows 用户目录下的 `.env`，然后安装并启动 `web` profile：
+
+```powershell
+$envFile = Join-Path $HOME ".env"
+
+if (Test-Path -LiteralPath $envFile -PathType Container) {
+    throw "$envFile exists as a directory; rename or remove it first."
+}
+
+$secureKey = Read-Host "Brave API key" -AsSecureString
+$keyPtr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureKey)
+
+try {
+    $apiKey = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($keyPtr)
+}
+finally {
+    [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($keyPtr)
+}
+
+if (Test-Path -LiteralPath $envFile) {
+    $lines = @(Get-Content -LiteralPath $envFile | Where-Object {
+        $_ -notmatch '^BRAVE_SEARCH_API_KEY='
+    })
+}
+else {
+    $lines = @()
+}
+
+[IO.File]::WriteAllLines(
+    $envFile,
+    [string[]]($lines + "BRAVE_SEARCH_API_KEY=$apiKey"),
+    [Text.UTF8Encoding]::new($false)
+)
+
+Remove-Variable apiKey -ErrorAction SilentlyContinue
+
+dsh plugin --profile web remove dsh-brave-search *> $null
+dsh plugin --profile web add github:high0/dsh-brave-search
+npx @deepseek-ai/dsh web
+```
+
+Windows 用户如果使用 WSL 或 Git Bash，应在对应的 Unix 环境中使用 Linux 版本；此时写入的是 WSL/Git Bash 的用户目录，而不是 Windows 原生用户目录。
+
+上面的命令要求 `~/.env`（Windows 下为用户目录中的 `.env`）是普通文件而不是目录，并会替换已有的 `BRAVE_SEARCH_API_KEY` 行。如果只想临时使用，也可以执行 `export BRAVE_SEARCH_API_KEY="你的 Brave API key"`（PowerShell 使用 `$env:BRAVE_SEARCH_API_KEY="你的 Brave API key"`）；这种方式只对当前终端有效，关闭终端后不会保留。命令中的 `BRAVE_SEARCH_API_KEY` 和 `$HOME/.env` 不要写成带反斜杠的 `BRAVE\_SEARCH\_API\_KEY` 或 `\~/.env`，否则 shell 可能无法正确识别变量或路径。
 
 然后直接从 GitHub 安装已构建的 bundle（不需要 clone、`npm install`、编译或手动编辑 profile 文件）。如果你按官方命令运行 `npx @deepseek-ai/dsh web`，目标 profile 是 `web`：
 
@@ -32,7 +91,7 @@ npx @deepseek-ai/dsh web
 dsh plugin --profile web add github:high0/dsh-brave-search && npx @deepseek-ai/dsh web
 ```
 
-这里的 `web` 是 DeepSeek Harness 官方默认 profile 名称；`demo` 只是自定义 profile 的示例名称，不是插件要求的固定名称。如果你使用自定义 profile（例如 `demo`），请将命令中的 `web` 替换为该 profile 名称。插件是后端工具 bundle，不提供浏览器端 `client.js`，因此不会出现在页面启动资源清单中；重启对应 profile 后，工具 `brave_search` 才会注册到 Harness。
+这里的 `web` 是 DeepSeek Harness 官方默认 profile 名称；`demo` 只是自定义 profile 的示例名称，不是插件要求的固定名称。插件是后端工具 bundle，不提供浏览器端 `client.js`，因此不会出现在页面启动资源清单中；重启对应 profile 后，工具 `brave_search` 才会注册到 Harness。
 
 环境变量 `BRAVE_SEARCH_API_KEY` 始终优先于 profile 配置中的 `apiKey`。密钥不会被写入 URL、工具结果或错误消息。
 
